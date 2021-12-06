@@ -60,4 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="day_4_actual.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day_4_example.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

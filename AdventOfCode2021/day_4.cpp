@@ -213,6 +213,7 @@ void Day_4::run_part_1() const
 
 	std::cout << "Example: " << run_part_1(example_input) << '\n';
 	std::cout << "Actual:  " << run_part_1(actual_input) << '\n';
+	std::cout << '\n';
 }
 
 std::string Day_4::run_part_1(std::fstream& input) const
@@ -236,6 +237,7 @@ void Day_4::run_part_2() const
 
 	std::cout << "Example: " << run_part_2(example_input) << '\n';
 	std::cout << "Actual:  " << run_part_2(actual_input) << '\n';
+	std::cout << '\n';
 }
 
 std::string Day_4::run_part_2(std::fstream& input) const

@@ -11,6 +11,6 @@ int main()
 	Day_2{}.run();
 	Day_3{}.run();
 	Day_4{}.run();
-	Day_5{}.run();
-	//Day_6{}.run();
+	//Day_5{}.run();
+	Day_6{}.run();
 }

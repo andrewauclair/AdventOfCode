@@ -157,6 +157,10 @@
     <ClInclude Include="day_5.h" />
     <ClInclude Include="day_6.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="day_4_actual.txt" />
+    <Text Include="day_4_example.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
