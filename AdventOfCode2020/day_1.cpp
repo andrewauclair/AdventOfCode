@@ -63,5 +63,19 @@ std::string Day_1::run_part_2(std::fstream& input) const
 {
 	const std::vector<int> values{ read_values(input) };
 
+	for (int a : values)
+	{
+		for (int b : values)
+		{
+			for (int c : values)
+			{
+				if (a + b + c == 2020)
+				{
+					return std::to_string(a * b * c);
+				}
+			}
+		}
+	}
+
 	return "error";
 }

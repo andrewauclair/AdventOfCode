@@ -116,6 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,17 +149,21 @@
     <ClCompile Include="day_6.cpp" />
     <ClCompile Include="day_7.cpp" />
     <ClCompile Include="day_8.cpp" />
+    <ClCompile Include="day_9.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="day.h" />
     <ClInclude Include="day_1.h" />
+    <ClInclude Include="day_10.h" />
     <ClInclude Include="day_2.h" />
     <ClInclude Include="day_3.h" />
     <ClInclude Include="day_4.h" />
     <ClInclude Include="day_5.h" />
     <ClInclude Include="day_6.h" />
     <ClInclude Include="day_7.h" />
+    <ClInclude Include="day_8.h" />
+    <ClInclude Include="day_9.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="day_4_actual.txt" />
