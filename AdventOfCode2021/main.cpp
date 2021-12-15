@@ -7,6 +7,9 @@
 #include "day_7.h"
 #include "day_8.h"
 #include "day_9.h"
+#include "day_10.h"
+#include "day_13.h"
+#include "day_14.h"
 
 int main()
 {
@@ -19,4 +22,7 @@ int main()
 	Day_7{}.run();
 	Day_8{}.run();
 	Day_9{}.run();
+	Day_10{}.run();
+	Day_13{}.run();
+	Day_14{}.run();
 }
