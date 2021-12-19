@@ -121,6 +121,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -141,10 +143,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="astar.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="day_1.cpp" />
     <ClCompile Include="day_10.cpp" />
     <ClCompile Include="day_13.cpp" />
     <ClCompile Include="day_14.cpp" />
+    <ClCompile Include="day_15.cpp" />
+    <ClCompile Include="day_16.cpp" />
+    <ClCompile Include="day_17.cpp" />
     <ClCompile Include="day_2.cpp" />
     <ClCompile Include="day_3.cpp" />
     <ClCompile Include="day_4.cpp" />
@@ -161,6 +169,9 @@
     <ClInclude Include="day_10.h" />
     <ClInclude Include="day_13.h" />
     <ClInclude Include="day_14.h" />
+    <ClInclude Include="day_15.h" />
+    <ClInclude Include="day_16.h" />
+    <ClInclude Include="day_17.h" />
     <ClInclude Include="day_2.h" />
     <ClInclude Include="day_3.h" />
     <ClInclude Include="day_4.h" />
