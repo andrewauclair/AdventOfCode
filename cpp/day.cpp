@@ -8,8 +8,10 @@ void Day::run() const
 
 std::string Unimplemented_Day::run_part_1() const
 {
+	return "";
 }
 
 std::string Unimplemented_Day::run_part_2() const
 {
+	return "";
 }
