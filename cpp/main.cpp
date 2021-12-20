@@ -8,7 +8,13 @@
 
 #include <cmath>
 
-constexpr int EXECUTION_COUNT{ 50 };
+constexpr int EXECUTION_COUNT{
+#ifdef _DEBUG
+	1
+#else
+	50
+#endif
+};
 
 #pragma region Utils
 
@@ -22,43 +28,48 @@ struct execution_result
 		return time / execution_count;
 	}
 
+	std::string raw_time() const
+	{
+		return std::to_string(time.count()) + "ns";
+	}
+
 	std::string display() const
 	{
-		auto display_time = time / (double)execution_count;
+		const std::chrono::duration<double, std::nano> display_time{ time / (double)execution_count };
 
 		std::ostringstream ss{};
 
-		if (display_time.count() < 100)
+		if (display_time.count() < 1000)
 		{
 			ss << display_time.count() << "ns";
 			return ss.str();
 		}
 
-		auto us{ std::chrono::duration_cast<std::chrono::microseconds>(display_time) };
+		const auto us{ std::chrono::duration_cast<std::chrono::microseconds>(display_time) };
 
-		if (us.count() < 100)
+		if (us.count() < 1000)
 		{
 			ss << us.count() << "us";
 			return ss.str();
 		}
 		
-		auto ms{ std::chrono::duration_cast<std::chrono::milliseconds>(display_time) };
+		const auto ms{ std::chrono::duration_cast<std::chrono::milliseconds>(display_time) };
 
-		if (ms.count() < 100)
+		if (ms.count() < 1000)
 		{
 			ss << ms.count() << "ms";
 			return ss.str();
 		}
 
-		auto seconds{ std::chrono::duration_cast<std::chrono::seconds>(display_time) };
+		const auto seconds{ std::chrono::duration_cast<std::chrono::seconds>(display_time) };
 
-		if (seconds.count() < 100)
+		if (seconds.count() < 1000)
 		{
 			ss << seconds.count() << "sc";
 			return ss.str();
 		}
 
-		auto minutes{ std::chrono::duration_cast<std::chrono::minutes>(display_time) };
+		const auto minutes{ std::chrono::duration_cast<std::chrono::minutes>(display_time) };
 
 		ss << minutes.count() << "mn";
 		return ss.str();
@@ -101,6 +112,14 @@ inline std::fstream read_input(const std::string& file)
 	return input;
 }
 
+inline void verify_answer(auto answer, auto expected)
+{
+	if (answer != expected)
+	{
+		throw std::runtime_error("solution has failed!");
+	}
+}
+
 #pragma endregion Utils
 
 #pragma region Advent of Code - 2015
@@ -135,7 +154,7 @@ void day_1_2015__execute__part1(const std::string& data)
 		}
 	}
 
-	_ASSERT(floor == 280);
+	verify_answer(floor, 280);
 }
 
 void day_1_2015__execute__part2(const std::string& data)
@@ -157,7 +176,7 @@ void day_1_2015__execute__part2(const std::string& data)
 
 		if (floor == -1)
 		{
-			_ASSERT(i + 1 == 1797);
+			verify_answer(i + 1, 1797);
 			break;
 		}
 	}
@@ -246,7 +265,7 @@ void day_2_2015__execute__part1(const std::vector<day_2_2015_data>& data)
 		total_paper += smallest + ((2 * side_1) + (2 * side_2) + (2 * side_3));
 	}
 	
-	_ASSERT(total_paper == 1606483);
+	verify_answer(total_paper, 1606483);
 }
 
 void day_2_2015__execute__part2(const std::vector<day_2_2015_data>& data)
@@ -289,7 +308,7 @@ void day_2_2015__execute__part2(const std::vector<day_2_2015_data>& data)
 		total_ribbon_feet += value.length * value.width * value.height;
 	}
 
-	_ASSERT(total_ribbon_feet == 3842356);
+	verify_answer(total_ribbon_feet, 3842356);
 }
 
 execution_result day_2_2015__time()
@@ -331,6 +350,851 @@ execution_result day_2_2015__time()
 #pragma endregion Advent of Code - 2020
 
 #pragma region Advent of Code - 2021
+
+#pragma region Day 1
+
+std::vector<int> day_1_2021__read_input()
+{
+	std::fstream input{ read_input("../input/2021/day_1.txt") };
+
+	std::vector<int> data{};
+
+	int depth{};
+
+	while (input >> depth)
+	{
+		data.push_back(depth);
+	}
+
+	return data;
+}
+
+void day_1_2021__execute__part1(const std::vector<int>& data)
+{
+	int depth_increases{};
+
+	int last_depth{ data.at(0) };
+
+	for (size_t i = 1; i < data.size(); i++)
+	{
+		const int depth{ data.at(i) };
+
+		if (depth > last_depth)
+		{
+			depth_increases++;
+		}
+		last_depth = depth;
+	}
+
+	verify_answer(depth_increases, 1195);
+}
+
+void day_1_2021__execute__part2(const std::vector<int>& data)
+{
+	std::array<int, 3> window{};
+
+	window.at(0) = data.at(0);
+	window.at(1) = data.at(1);
+	window.at(2) = data.at(2);
+
+	int sum{ window.at(0) + window.at(1) + window.at(2) };
+
+	int depth_increases{};
+
+	for (size_t i = 3; i < data.size(); i++)
+	{
+		const int previous_sum{ sum };
+
+		window.at(0) = window.at(1);
+		window.at(1) = window.at(2);
+		window.at(2) = data.at(i);
+
+		sum = window.at(0) + window.at(1) + window.at(2);
+
+		if (sum > previous_sum)
+		{
+			depth_increases++;
+		}
+	}
+
+	verify_answer(depth_increases, 1235);
+}
+
+execution_result day_1_2021__time()
+{
+	std::vector<int> input{ day_1_2021__read_input() };
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	for (int i = 0; i < EXECUTION_COUNT; i++)
+	{
+		day_1_2021__execute__part1(input);
+		day_1_2021__execute__part2(input);
+	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+
+	return { stop - start, EXECUTION_COUNT };
+}
+
+#pragma endregion Day 1
+
+#pragma region Day 2
+
+enum class day_2_2021__command_type
+{
+	forward,
+	down,
+	up
+};
+
+struct day_2_2021__command
+{
+	day_2_2021__command_type type{};
+	int units{};
+};
+
+std::vector<day_2_2021__command> day_2_2021__read_input()
+{
+	std::fstream input{ read_input("../input/2021/day_2.txt") };
+
+	std::vector<day_2_2021__command> data{};
+
+	std::string command{};
+	int units{};
+
+	while (input >> command)
+	{
+		input >> units;
+
+		if (command.compare("forward") == 0)
+		{
+			data.emplace_back(day_2_2021__command_type::forward, units);
+		}
+		else if (command.compare("down") == 0)
+		{
+			data.emplace_back(day_2_2021__command_type::down, units);
+		}
+		else if (command.compare("up") == 0)
+		{
+			data.emplace_back(day_2_2021__command_type::up, units);
+		}
+	}
+
+	return data;
+}
+
+void day_2_2021__execute__part1(const std::vector<day_2_2021__command>& data)
+{
+	int horizontal_position{};
+	int depth_position{};
+
+	for (const day_2_2021__command& command : data)
+	{
+		switch (command.type)
+		{
+		case day_2_2021__command_type::forward:
+			horizontal_position += command.units;
+			break;
+		case day_2_2021__command_type::down:
+			depth_position += command.units;
+			break;
+		case day_2_2021__command_type::up:
+			depth_position -= command.units;
+			break;
+		}
+	}
+
+	const int result{ horizontal_position * depth_position };
+	verify_answer(result, 1746616);
+}
+
+void day_2_2021__execute__part2(const std::vector<day_2_2021__command>& data)
+{
+	int horizontal_position{};
+	int depth_position{};
+	int aim_position{};
+
+	for (const day_2_2021__command& command : data)
+	{
+		switch (command.type)
+		{
+		case day_2_2021__command_type::forward:
+			horizontal_position += command.units;
+
+			depth_position += aim_position * command.units;
+			break;
+		case day_2_2021__command_type::down:
+			aim_position += command.units;
+			break;
+		case day_2_2021__command_type::up:
+			aim_position -= command.units;
+			break;
+		}
+	}
+
+	verify_answer(horizontal_position * depth_position, 1741971043);
+}
+
+execution_result day_2_2021__time()
+{
+	std::vector<day_2_2021__command> input{ day_2_2021__read_input() };
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	for (int i = 0; i < EXECUTION_COUNT; i++)
+	{
+		day_2_2021__execute__part1(input);
+		day_2_2021__execute__part2(input);
+	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+
+	return { stop - start, EXECUTION_COUNT };
+}
+
+#pragma endregion Day 2
+
+#pragma region Day 3
+
+struct day_3_2021__data
+{
+	std::vector<int> numbers{};
+	int length{};
+};
+
+day_3_2021__data day_3_2021__read_input()
+{
+	std::fstream input{ read_input("../input/2021/day_3.txt") };
+
+	day_3_2021__data data{};
+
+	std::string line{};
+
+	while (input >> line)
+	{
+		data.numbers.push_back(std::stoi(line, nullptr, 2));
+	}
+	data.length = (int)line.size();
+
+	return data;
+}
+
+void day_3_2021__execute__part1(const day_3_2021__data& data)
+{
+	int length{ data.length };
+
+	std::array<int, 5> ones{};
+	std::vector<int> ones_counts(length);
+
+	for (int value : data.numbers)
+	{
+		int mask{ 1 };
+
+		for (int i = 0; i < length; i++)
+		{
+			if (value & mask)
+			{
+				ones_counts[i]++;
+			}
+			mask <<= 1;
+		}
+	}
+
+	int gamma_rate{};
+	int epsilon_rate{};
+
+	int mask{ 1 };
+
+	int count{ (int)data.numbers.size() };
+
+	for (int i = 0; i < length; i++)
+	{
+		if (ones_counts[i] > count / 2)
+		{
+			gamma_rate |= mask;
+		}
+		else
+		{
+			epsilon_rate |= mask;
+		}
+		mask <<= 1;
+	}
+
+	verify_answer(gamma_rate * epsilon_rate, 1071734);
+}
+
+void day_3_2021__execute__part2(const day_3_2021__data& data)
+{
+	const int bit_count{ data.length };
+
+
+	const auto calculate_common_value = [bit_count](const std::vector<int>& values, int tie_break_value) -> int
+	{
+		std::array<int, 5> ones{};
+		std::vector<int> ones_counts(bit_count);
+
+		for (int value : values)
+		{
+			int mask{ 1 };
+
+			for (int i = 0; i < bit_count; i++)
+			{
+				if (value & mask)
+				{
+					ones_counts[i]++;
+				}
+				mask <<= 1;
+			}
+		}
+
+		int common_bits{};
+
+		int mask{ 1 };
+
+		int count{ (int)values.size() };
+
+		for (int i = 0; i < bit_count; i++)
+		{
+			if (ones_counts[i] == count / 2 && count % 2 == 0)
+			{
+				if (tie_break_value)
+				{
+					common_bits |= mask;
+				}
+			}
+			else if (ones_counts[i] > count / 2)
+			{
+				common_bits |= mask;
+			}
+			mask <<= 1;
+		}
+
+		return common_bits;
+	};
+
+	std::vector<int> oxygen_rating{ data.numbers };
+	std::vector<int> CO2_rating{ data.numbers };
+
+	for (int i = 0; i < bit_count; i++)
+	{
+		const int shift{ bit_count - i - 1 };
+
+		const int mask{ 1 << shift };
+
+		if (oxygen_rating.size() > 1)
+		{
+			const int common_bits{ calculate_common_value(oxygen_rating, 1) };
+
+			const int common{ (common_bits & mask) >> shift };
+
+			oxygen_rating.erase(
+				std::remove_if(
+					oxygen_rating.begin(),
+					oxygen_rating.end(),
+					[mask, common, shift](int val)
+			{
+				const int result{ (val & mask) >> shift };
+				return ((val & mask) >> shift) != common; // erase values that don't match common, this has to be the opposite of what we want to keep
+			}),
+				oxygen_rating.end()
+				);
+		}
+
+		if (CO2_rating.size() > 1)
+		{
+			const int common_bits{ calculate_common_value(CO2_rating, 1) };
+
+			const int common{ (common_bits & mask) >> shift };
+
+			CO2_rating.erase(
+				std::remove_if(
+					CO2_rating.begin(),
+					CO2_rating.end(),
+					[mask, common, shift](int val)
+			{
+				return ((val & mask) >> shift) == common;
+			}),
+				CO2_rating.end()
+				);
+		}
+	}
+
+	verify_answer(oxygen_rating.at(0) * CO2_rating.at(0), 6124992);
+}
+
+execution_result day_3_2021__time()
+{
+	day_3_2021__data input{ day_3_2021__read_input() };
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	for (int i = 0; i < EXECUTION_COUNT; i++)
+	{
+		day_3_2021__execute__part1(input);
+		day_3_2021__execute__part2(input);
+	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+
+	return { stop - start, EXECUTION_COUNT };
+}
+
+#pragma endregion Day 3
+
+#pragma region Day 4
+
+constexpr int BOARD_SIZE = 5;
+
+struct day_4_2021__bingo_board
+{
+	std::array<std::array<int, BOARD_SIZE>, BOARD_SIZE> numbers{};
+	std::array<std::array<bool, BOARD_SIZE>, BOARD_SIZE> marked{};
+
+	int win_order{};
+
+	void mark(int number)
+	{
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			for (int j = 0; j < BOARD_SIZE; j++)
+			{
+				if (numbers[i][j] == number)
+				{
+					marked[i][j] = true;
+				}
+			}
+		}
+	}
+
+	bool has_won() const
+	{
+		// check rows
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			bool won{ true };
+
+			for (int j = 0; j < BOARD_SIZE; j++)
+			{
+				if (!marked[i][j])
+				{
+					won = false;
+					break;
+				}
+			}
+			if (won)
+			{
+				return true;
+			}
+		}
+		// check columns
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			bool won{ true };
+
+			for (int j = 0; j < BOARD_SIZE; j++)
+			{
+				if (!marked[j][i])
+				{
+					won = false;
+					break;
+				}
+			}
+			if (won)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	int sum_unmarked() const
+	{
+		int sum{};
+
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			for (int j = 0; j < BOARD_SIZE; j++)
+			{
+				if (!marked[i][j])
+				{
+					sum += numbers[i][j];
+				}
+			}
+		}
+		return sum;
+	}
+};
+
+struct day_4_2021__file_results
+{
+	std::vector<int> numbers_to_draw{};
+
+	std::vector<day_4_2021__bingo_board> boards{};
+
+	size_t next_number_index{};
+
+	void draw()
+	{
+		const int number_drawn{ numbers_to_draw[next_number_index++] };
+
+		for (day_4_2021__bingo_board& board : boards)
+		{
+			bool won{ board.has_won() };
+			board.mark(number_drawn);
+
+			if (!won && board.has_won())
+			{
+				board.win_order = boards_remaining();
+			}
+		}
+	}
+
+	bool has_a_winner() const
+	{
+		for (const day_4_2021__bingo_board& board : boards)
+		{
+			if (board.has_won())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	int boards_remaining() const
+	{
+		int count{ (int)boards.size() };
+
+		for (const day_4_2021__bingo_board& board : boards)
+		{
+			if (board.has_won())
+			{
+				count--;
+			}
+		}
+		return count;
+	}
+
+	int final_score() const
+	{
+		const int number_drawn{ numbers_to_draw.at(next_number_index - 1) };
+
+		for (const day_4_2021__bingo_board& board : boards)
+		{
+			if (board.has_won())
+			{
+				return board.sum_unmarked() * number_drawn;
+			}
+		}
+		return 0;
+	}
+
+	int final_score_last_board()
+	{
+		const int number_drawn{ numbers_to_draw.at(next_number_index - 1) };
+
+		for (const day_4_2021__bingo_board& board : boards)
+		{
+			if (board.win_order == 0)
+			{
+				return board.sum_unmarked() * number_drawn;
+			}
+		}
+		return 0;
+	}
+};
+
+day_4_2021__file_results day_4_2021__read_input()
+{
+	std::fstream input{ read_input("../input/2021/day_4.txt") };
+
+	day_4_2021__file_results results{};
+
+	std::string numbers{};
+	input >> numbers;
+
+	std::stringstream ss{ numbers };
+	for (int i{}; ss >> i;)
+	{
+		results.numbers_to_draw.push_back(i);
+		if (ss.peek() == ',')
+		{
+			ss.ignore();
+		}
+	}
+
+	while (!input.eof())
+	{
+		day_4_2021__bingo_board board{};
+
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			for (int j = 0; j < BOARD_SIZE; j++)
+			{
+				input >> board.numbers[i][j];
+			}
+		}
+
+		results.boards.push_back(board);
+	}
+
+	return results;
+}
+
+void day_4_2021__execute__part1(const day_4_2021__file_results& data)
+{
+	day_4_2021__file_results results{ data };
+	
+	while (!results.has_a_winner())
+	{
+		results.draw();
+	}
+
+	verify_answer(results.final_score(), 33462);
+}
+
+void day_4_2021__execute__part2(const day_4_2021__file_results& data)
+{
+	day_4_2021__file_results results{ data };
+
+	while (results.boards_remaining() > 0)
+	{
+		results.draw();
+	}
+
+	verify_answer(results.final_score_last_board(), 30070);
+}
+
+execution_result day_4_2021__time()
+{
+	day_4_2021__file_results input{ day_4_2021__read_input() };
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	for (int i = 0; i < EXECUTION_COUNT; i++)
+	{
+		day_4_2021__execute__part1(input);
+		day_4_2021__execute__part2(input);
+	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+
+	return { stop - start, EXECUTION_COUNT };
+}
+
+#pragma endregion Day 4
+
+#pragma region Day 5
+
+#pragma endregion Day 5
+
+#pragma region Day 18
+
+namespace _2021_17
+{
+	struct input_data
+	{
+		int target_x_min{};
+		int target_x_max{};
+		int target_y_min{};
+		int target_y_max{};
+	};
+
+	int calculate_x_velocity(int x_pos, bool less_than)
+	{
+		int x_vel{};
+
+		int starting_vel{ 1 };
+
+		while (x_vel < x_pos)
+		{
+			x_vel += starting_vel++;
+		}
+
+		starting_vel--;
+
+		if (less_than)
+		{
+			starting_vel--;
+		}
+
+		return starting_vel;
+	}
+
+	bool does_y_vel_hit_target(int x_vel, int y_vel, int target_y_min, int target_y_max)
+	{
+		int x_pos{};
+		int y_pos{};
+		int max_height{};
+
+		while (y_pos > target_y_min)
+		{
+			x_pos += x_vel;
+			y_pos += y_vel;
+
+			if (y_pos > max_height) max_height = y_pos;
+
+			if (y_pos >= target_y_min && y_pos <= target_y_max) return true;
+
+			if (x_vel > 0) x_vel--;
+
+			y_vel--;
+		}
+
+		return false;
+	}
+
+	bool does_vel_hit_target(int x_vel, int y_vel, int target_x_min, int target_x_max, int target_y_min, int target_y_max)
+	{
+		int x_pos{};
+		int y_pos{};
+
+		while (x_vel != 0 || (x_pos >= target_x_min && x_pos <= target_x_max))
+		{
+			x_pos += x_vel;
+			y_pos += y_vel;
+
+			if (x_pos >= target_x_min && x_pos <= target_x_max &&
+				y_pos >= target_y_min && y_pos <= target_y_max)
+			{
+				return true;
+			}
+			else if (x_vel == 0 && y_pos < target_y_min) return false;
+
+			if (x_vel > 0) x_vel--;
+
+			y_vel--;
+		}
+		return false;
+	}
+
+	int calculate_max_height(int x_vel, int y_vel, int target_y_min, int target_y_max)
+	{
+		int x_pos{};
+		int y_pos{};
+		int max_height{};
+
+		while (y_pos > target_y_min)
+		{
+			x_pos += x_vel;
+			y_pos += y_vel;
+
+			if (y_pos > max_height) max_height = y_pos;
+
+			if (y_pos >= target_y_min && y_pos <= target_y_max) return max_height;
+
+			if (x_vel > 0) x_vel--;
+
+			y_vel--;
+		}
+
+		return max_height;
+	}
+
+	int calculate_y_velocity(int x_vel, int target_y_min, int target_y_max)
+	{
+		int y_vel = x_vel;
+		int consecutive_misses{};
+
+		int max_match{};
+
+		while (true)
+		{
+			const bool match = does_y_vel_hit_target(x_vel, y_vel, target_y_min, target_y_max);
+
+			if (!match)
+			{
+				consecutive_misses++;
+
+				if (consecutive_misses > abs(target_y_max - target_y_min) * 2) break;
+			}
+
+			if (match)
+			{
+				max_match = y_vel;
+			}
+
+			y_vel++;
+		}
+
+		return max_match;
+	}
+
+	int count_initial_velocities(int target_x_min, int target_x_max, int target_y_min, int target_y_max)
+	{
+		int count{};
+
+		for (int x_vel = 0; x_vel < target_x_max + 1; x_vel++)
+		{
+			for (int y_vel = target_y_min; y_vel < abs(target_y_min) + 1; y_vel++)
+			{
+				if (does_vel_hit_target(x_vel, y_vel, target_x_min, target_x_max, target_y_min, target_y_max))
+				{
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+}
+
+_2021_17::input_data day_17_2021__read_input()
+{
+	std::fstream input{ read_input("../input/2021/day_17.txt") };
+
+	std::string line{};
+	getline(input, line);
+
+	_2021_17::input_data data{};
+
+	sscanf_s(line.c_str(), "target area: x=%d..%d, y=%d..%d", &data.target_x_min, &data.target_x_max, &data.target_y_min, &data.target_y_max);
+
+	return data;
+}
+
+void day_17_2021__execute__part1(const _2021_17::input_data& data)
+{
+	int start_vel_min{ _2021_17::calculate_x_velocity(data.target_x_min, false) };
+	int start_vel_max{ _2021_17::calculate_x_velocity(data.target_x_max, true) };
+
+	int y_vel_x_min{ _2021_17::calculate_y_velocity(start_vel_min, data.target_y_min, data.target_y_max) };
+	int y_vel_x_max{ _2021_17::calculate_y_velocity(start_vel_max, data.target_y_min, data.target_y_max) };
+
+	int y_max_min{ _2021_17::calculate_max_height(start_vel_min, y_vel_x_min, data.target_y_min, data.target_y_max) };
+	int y_max_max{ _2021_17::calculate_max_height(start_vel_max, y_vel_x_max, data.target_y_min, data.target_y_max) };
+
+	const int answer{ y_max_min > y_max_max ? y_max_min : y_max_max };
+
+	verify_answer(answer, 19503);
+}
+
+void day_17_2021__execute__part2(const _2021_17::input_data& data)
+{
+	int answer{ _2021_17::count_initial_velocities(data.target_x_min, data.target_x_max, data.target_y_min, data.target_y_max) };
+
+	verify_answer(answer, 5200);
+}
+
+execution_result day_17_2021__time()
+{
+	_2021_17::input_data input{ day_17_2021__read_input() };
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	for (int i = 0; i < EXECUTION_COUNT; i++)
+	{
+		day_17_2021__execute__part1(input);
+		day_17_2021__execute__part2(input);
+	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+
+	return { stop - start, EXECUTION_COUNT };
+}
+
+#pragma endregion Day 18
 
 #pragma region Day 19
 
@@ -842,7 +1706,7 @@ void day_20_2021__execute__part1(const day_20_2021__data& data)
 			}
 		}
 	}
-	_ASSERT(pixels_lit == 5218);
+	verify_answer(pixels_lit, 5218);
 }
 
 void day_20_2021__execute__part2(const day_20_2021__data& data)
@@ -870,7 +1734,7 @@ void day_20_2021__execute__part2(const day_20_2021__data& data)
 		}
 	}
 	
-	_ASSERT(pixels_lit == 15527);
+	verify_answer(pixels_lit, 15527);
 }
 
 execution_result day_20_2021__time()
@@ -896,8 +1760,6 @@ execution_result day_20_2021__time()
 
 int main()
 {
-	std::cout << "            2015  2016  2017  2018  2019  2020  2021\n";
-
 	std::array<std::array<execution_result, 25>, 7> times{};
 	
 	for (int i = 0; i < times.size(); i++)
@@ -908,18 +1770,33 @@ int main()
 		}
 	}
 
-	times.at(0).at(0) = day_1_2015__time();
-	times.at(0).at(1) = day_2_2015__time();
+	const auto year = [](auto num) { return num - 2015; };
+	const auto day = [](auto num) { return num - 1; };
 
-	times.at(6).at(19) = day_20_2021__time();
+	auto& y2015{ times.at(year(2015)) };
+
+	y2015.at(day(1)) = day_1_2015__time();
+	y2015.at(day(2)) = day_2_2015__time();
+
+	auto& y2021{ times.at(year(2021)) };
+	
+	y2021.at(day(1)) = day_1_2021__time();
+	y2021.at(day(2)) = day_2_2021__time();
+	y2021.at(day(3)) = day_3_2021__time();
+	y2021.at(day(4)) = day_4_2021__time();
+	
+	y2021.at(day(17)) = day_17_2021__time();
+
+	y2021.at(day(20)) = day_20_2021__time();
+
+	std::cout << "           2015    2016    2017    2018    2019    2020    2021\n";
 
 	for (int i = 0; i < 25; i++)
 	{
 		std::cout << "day ";
 		std::cout << std::setw(2) << (i + 1);
-		std::cout << "      ";
+		std::cout << "    ";
 
-		std::cout << std::setw(2);
 
 		for (int j = 0; j < times.size(); j++)
 		{
@@ -927,20 +1804,22 @@ int main()
 			if (times.at(j).at(i).execution_count > 0)
 			{
 				//printf("%llums  ", times.at(j).at(i));
+				std::cout << std::setw(5);
 				std::cout << times.at(j).at(i).display();
+				//std::cout << " (" << times.at(j).at(i).raw_time() << ")";
 				
 			}
 			else
 			{
-				std::cout << "    ";
+				std::cout << "     ";
 			}
-			std::cout << "  ";
+			std::cout << "   ";
 		}
 		std::cout << '\n';
 	}
 
 	std::cout << '\n';
-	std::cout << "total       ";
+	std::cout << "total     ";
 	std::cout << std::setw(2);
 
 	execution_result all_time_total{};
@@ -962,13 +1841,14 @@ int main()
 
 		if (year_total.execution_count > 0)
 		{
+			std::cout << std::setw(5);
 			std::cout << year_total.display();
 		}
 		else
 		{
-			std::cout << "    ";
+			std::cout << "     ";
 		}
-		std::cout << "  ";
+		std::cout << "   ";
 	}
 	std::cout << all_time_total.display();
 	std::cout << '\n';

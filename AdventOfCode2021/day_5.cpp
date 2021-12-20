@@ -24,26 +24,6 @@ struct Line
 	}
 
 	bool on_line(Point a, Point b, Point c) const {
-		//return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) == 0;
-
-		/*const double slope = (b.y - a.y) / (double)(b.x - a.x);
-		const double y_intercept = a.y - a.x * slope;
-		const double solution = (slope * c.x) + y_intercept;
-
-		if (slope != 0)
-		{
-			if (c.y > solution)
-			{
-				return false;
-			}
-			if (c.y < solution)
-			{
-				return false;
-			}
-		}
-		printf("hit! point: %d,%d line: %d,%d -> %d,%d slope: %f\n", c.x, c.y, a.x, a.y, b.x, b.y, slope);
-		return true;*/
-
 		const float slope = (b.y - a.y) / (float)(b.x - a.x);
 
 		const bool on_infinite_line = (c.y - a.y) == slope * (c.x - a.x);
@@ -74,13 +54,6 @@ struct Line
 			}
 		}
 			return on_line(start, end, point);
-		
-		//return (start.x - point.x) * (start.y - point.y) == (point.x - end.x) * (point.y - end.y);
-		//return (start.x - end.x) * (point.y - start.y) == (start.y - end.y) * (point.x - start.x);
-		/*return (start.x < point.x && point.x < end.x &&
-			start.y < point.y && point.y < end.y) || 
-			(start.x > point.x && point.x > end.x &&
-				start.y > point.y && point.y > end.y);*/
 	}
 };
 
@@ -97,16 +70,6 @@ std::vector<Line> read_lines(std::fstream& input)
 		sscanf_s(str.c_str(), "%d,%d -> %d,%d", &line.start.x, &line.start.y, &line.end.x, &line.end.y);
 
 		lines.push_back(line);
-		/*input >> line.start.x;
-		input.ignore(',');
-		input >> line.start.y;
-		input.ignore('-');
-		input.ignore('>');
-		input >> line.end.x;
-		input.ignore(',');
-		input >> line.end.y;
-
-		lines.push_back(line);*/
 	}
 
 	return lines;
