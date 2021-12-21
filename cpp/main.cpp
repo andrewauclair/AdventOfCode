@@ -5,6 +5,8 @@
 #include <vector>
 #include <set>
 #include <array>
+#include <map>
+#include <list>
 
 #include <cmath>
 
@@ -76,6 +78,23 @@ struct execution_result
 	}
 };
 
+struct point_2d
+{
+	int x{};
+	int y{};
+
+	auto operator<=>(const point_2d&) const = default;
+
+	int operator[](int index) const
+	{
+		if (index == 0)
+		{
+			return x;
+		}
+		return y;
+	}
+};
+
 struct point_3d
 {
 	int x{};
@@ -92,14 +111,12 @@ struct point_3d
 			return x;
 		case 1:
 			return y;
-		case 2:
-			return z;
 		}
-		return 0;
+		return z;
 	}
 };
 
-inline std::fstream read_input(const std::string& file)
+inline std::fstream read_input_from_file(const std::string& file)
 {
 	std::fstream input{ file, std::ios_base::in };
 
@@ -128,7 +145,7 @@ inline void verify_answer(auto answer, auto expected)
 
 std::string day_1_2015__read_input()
 {
-	std::fstream input{ read_input("../input/2015/day_1.txt") };
+	std::fstream input{ read_input_from_file("../input/2015/day_1.txt") };
 
 	std::string data{};
 	input >> data;
@@ -212,7 +229,7 @@ struct day_2_2015_data
 
 std::vector<day_2_2015_data> day_2_2015__read_input()
 {
-	std::fstream input{ read_input("../input/2015/day_2.txt") };
+	std::fstream input{ read_input_from_file("../input/2015/day_2.txt") };
 
 	std::vector<day_2_2015_data> data{};
 
@@ -355,7 +372,7 @@ execution_result day_2_2015__time()
 
 std::vector<int> day_1_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_1.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_1.txt") };
 
 	std::vector<int> data{};
 
@@ -456,7 +473,7 @@ struct day_2_2021__command
 
 std::vector<day_2_2021__command> day_2_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_2.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_2.txt") };
 
 	std::vector<day_2_2021__command> data{};
 
@@ -565,7 +582,7 @@ struct day_3_2021__data
 
 day_3_2021__data day_3_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_3.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_3.txt") };
 
 	day_3_2021__data data{};
 
@@ -907,7 +924,7 @@ struct day_4_2021__file_results
 
 day_4_2021__file_results day_4_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_4.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_4.txt") };
 
 	day_4_2021__file_results results{};
 
@@ -986,6 +1003,238 @@ execution_result day_4_2021__time()
 #pragma endregion Day 4
 
 #pragma region Day 5
+
+namespace _2021_5
+{
+	struct line
+	{
+		point_2d start{};
+		point_2d end{};
+
+		bool is_straight_line() const
+		{
+			//return false;
+			return (start.x == end.x) || (start.y == end.y);
+		}
+
+		bool on_line(const point_2d& a, const point_2d& b, const point_2d& c) const {
+			const float slope = (b.y - a.y) / (float)(b.x - a.x);
+
+			const bool on_infinite_line = (c.y - a.y) == (int)(slope * (c.x - a.x));
+
+			if (on_infinite_line)
+			{
+				const bool within_x_range = (a.x <= c.x && c.x <= b.x) || (a.x >= c.x && c.x >= b.x);
+				const bool within_y_range = (a.y <= c.y && c.y <= b.y) || (a.y >= c.y && c.y >= b.y);
+
+				return within_x_range && within_y_range;
+			}
+			return false;
+		}
+
+		bool intersects_point(const point_2d& point) const
+		{
+			if (is_straight_line())
+			{
+				if (start.x == point.x)
+				{
+					return (start.y <= point.y && point.y <= end.y) ||
+						(start.y >= point.y && point.y >= end.y);
+				}
+				if (start.y == point.y)
+				{
+					return (start.x <= point.x && point.x <= end.x) ||
+						(start.x >= point.x && point.x >= end.x);
+				}
+			}
+			return on_line(start, end, point);
+		}
+
+		void plot(std::map<point_2d, int>& grid)
+		{
+			const int rise{ end.y - start.y };
+			const int run{ end.x - start.x };
+			const point_2d offset{ run == 0 ? 0 : run < 0 ? -1 : 1, rise == 0 ? 0 : rise < 0 ? -1 : 1 };
+
+			point_2d point{ start };
+
+			while (point != end)
+			{
+				grid[point]++;
+
+				point.x += offset.x;
+				point.y += offset.y;
+			}
+			grid[end]++;
+		}
+	};
+
+	std::vector<line> read_input()
+	{
+		std::fstream input{ ::read_input_from_file("../input/2021/day_5.txt") };
+		
+		std::vector<line> lines{};
+
+		std::string str{};
+
+		while (getline(input, str))
+		{
+			line line{};
+
+			sscanf_s(str.c_str(), "%d,%d -> %d,%d", &line.start.x, &line.start.y, &line.end.x, &line.end.y);
+
+			lines.push_back(line);
+		}
+
+		return lines;
+	}
+
+	void execute_part1(const std::vector<line>& data)
+	{
+		int largest_x{};
+		int largest_y{};
+
+		for (auto line : data)
+		{
+			if (line.start.x > largest_x)
+			{
+				largest_x = line.start.x;
+			}
+
+			if (line.start.y > largest_y)
+			{
+				largest_y = line.start.y;
+			}
+
+			if (line.end.x > largest_x)
+			{
+				largest_x = line.end.x;
+			}
+
+			if (line.end.y > largest_y)
+			{
+				largest_y = line.end.y;
+			}
+		}
+
+		std::vector<line> lines{ data };
+
+		std::map<point_2d, int> grid{};
+
+		for (line& line : lines)
+		{
+			if (line.is_straight_line())
+			{
+				line.plot(grid);
+			}
+		}
+
+		int points_with_multiple_lines{};
+
+		for (auto& point : grid)
+		{
+			if (point.second > 1)
+			{
+				points_with_multiple_lines++;
+			}
+		}
+		//for (int y = 0; y <= largest_y; y++)
+		//{
+		//	for (int x = 0; x <= largest_x; x++)
+		//	{
+		//		if (grid.contains({ x,y }) && grid.at({ x,y }) > 1)
+		//		{
+		//			points_with_multiple_lines++;
+		//		}
+		//		/*point_2d point{ x, y };
+
+		//		int line_count{};
+
+		//		for (const line& line : data)
+		//		{
+		//			if (line.is_straight_line() && line.intersects_point(point))
+		//			{
+		//				line_count++;
+		//			}
+		//		}
+
+		//		if (line_count > 1)
+		//		{
+		//			points_with_multiple_lines++;
+		//		}*/
+		//	}
+		//}
+
+		verify_answer(points_with_multiple_lines, 5442);
+	}
+
+	void execute_part2(const std::vector<line>& data)
+	{
+		int largest_x{};
+		int largest_y{};
+
+		for (auto line : data)
+		{
+			if (line.start.x > largest_x)
+			{
+				largest_x = line.start.x;
+			}
+
+			if (line.start.y > largest_y)
+			{
+				largest_y = line.start.y;
+			}
+
+			if (line.end.x > largest_x)
+			{
+				largest_x = line.end.x;
+			}
+
+			if (line.end.y > largest_y)
+			{
+				largest_y = line.end.y;
+			}
+		}
+
+		std::vector<line> lines{ data };
+
+		std::map<point_2d, int> grid{};
+
+		for (line& line : lines)
+		{
+			line.plot(grid);
+		}
+
+		int points_with_multiple_lines{};
+
+		for (auto& point : grid)
+		{
+			if (point.second > 1)
+			{
+				points_with_multiple_lines++;
+			}
+		}
+
+		verify_answer(points_with_multiple_lines, 19571);
+	}
+
+	execution_result time()
+	{
+		auto input{ read_input() };
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+		for (int i = 0; i < 1; i++)
+		{
+			execute_part1(input);
+			execute_part2(input);
+		}
+
+		auto stop = std::chrono::high_resolution_clock::now();
+
+		return { stop - start, 1 };
+	}
+}
 
 #pragma endregion Day 5
 
@@ -1142,7 +1391,7 @@ namespace _2021_17
 
 _2021_17::input_data day_17_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_17.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_17.txt") };
 
 	std::string line{};
 	getline(input, line);
@@ -1221,7 +1470,7 @@ constexpr int DAY_19_2021__THRESHOLD = 12;
 
 std::vector<day_19_2021__scanner> day_19_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_19.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_19.txt") };
 
 	std::vector<day_19_2021__scanner> data{};
 
@@ -1588,7 +1837,7 @@ struct day_20_2021__data
 
 day_20_2021__data day_20_2021__read_input()
 {
-	std::fstream input{ read_input("../input/2021/day_20.txt") };
+	std::fstream input{ read_input_from_file("../input/2021/day_20.txt") };
 
 	day_20_2021__data data{};
 
@@ -1756,6 +2005,400 @@ execution_result day_20_2021__time()
 
 #pragma endregion Day 20
 
+#pragma region Day 21
+
+namespace _2021_21
+{
+	struct starting_positions
+	{
+		int player1{};
+		int player2{};
+	};
+
+	struct universe
+	{
+		int position_player1{};
+		int position_player2{};
+
+		int score_player1{};
+		int score_player2{};
+
+		int roll1_player1{ -1 };
+		int roll2_player1{ -1 };
+		int roll3_player1{ -1 };
+
+		int roll1_player2{ -1 };
+		int roll2_player2{ -1 };
+		int roll3_player2{ -1 };
+	};
+
+	struct game
+	{
+		int position_player1{};
+		int position_player2{};
+
+		int score_player1{};
+		int score_player2{};
+
+		auto operator<=>(const game&) const = default;
+	};
+
+	struct results
+	{
+		uint64_t wins_player1{};
+		uint64_t wins_player2{};
+
+		results& operator+=(const results& other)
+		{
+			wins_player1 += other.wins_player1;
+			wins_player2 += other.wins_player2;
+			return *this;
+		}
+	};
+
+	starting_positions read_input()
+	{
+		std::fstream input{ read_input_from_file("../input/2021/day_21.txt") };
+
+		std::string player_1{};
+		getline(input, player_1);
+
+		std::string player_2{};
+		getline(input, player_2);
+
+		starting_positions data{};
+
+		sscanf_s(player_1.c_str(), "Player 1 starting position: %d", &data.player1);
+		sscanf_s(player_2.c_str(), "Player 2 starting position: %d", &data.player2);
+
+		return data;
+	}
+
+	void execute_part1(const starting_positions& data)
+	{
+		int die{ 1 };
+		int total_rolls{};
+
+		const auto roll_die = [&die, &total_rolls]()
+		{
+			const int roll{ die };
+			
+			die++;
+			total_rolls++;
+
+			if (die > 100)
+			{
+				die = 1;
+			}
+			return roll;
+		};
+
+		int score_player1{};
+		int score_player2{};
+
+		int position_player1{ data.player1 };
+		int position_player2{ data.player2 };
+
+		while (score_player1 < 1000 && score_player2 < 1000)
+		{
+			const int roll1_player1{ roll_die() };
+			const int roll2_player1{ roll_die() };
+			const int roll3_player1{ roll_die() };
+			const int roll_player1{ roll1_player1 + roll2_player1 + roll3_player1 };
+
+			position_player1 += roll_player1;
+
+			if (position_player1 > 10)
+			{
+				position_player1 = position_player1 % 10;
+				if (position_player1 == 0) position_player1 = 10;
+			}
+
+			score_player1 += position_player1;
+
+			//printf("player 1, score: %d, roll: {%d, %d, %d}, pos: %d\n", score_player1, roll1_player1, roll2_player1, roll3_player1, position_player1);
+			if (score_player1 >= 1000)
+			{
+				break;
+			}
+
+			const int roll1_player2{ roll_die() };
+			const int roll2_player2{ roll_die() };
+			const int roll3_player2{ roll_die() };
+			const int roll_player2{ roll1_player2 + roll2_player2 + roll3_player2 };
+
+			position_player2 += roll_player2;
+
+			if (position_player2 > 10)
+			{
+				position_player2 = position_player2 % 10;
+				if (position_player2 == 0) position_player2 = 10;
+			}
+
+			score_player2 += position_player2;
+
+			//printf("player 2, score: %d, roll: {%d, %d, %d}, pos: %d\n", score_player2, roll1_player2, roll2_player2, roll3_player2, position_player2);
+
+			if (score_player2 >= 1000)
+			{
+				break;
+			}
+		}
+
+		const int answer{ (score_player1 > score_player2 ? score_player2 : score_player1) * total_rolls };
+		
+		//verify_answer(answer, 752745);
+	}
+
+	results count_wins(const std::map<int, uint64_t>& games, int score_player1, int score_player2, int position_player1, int position_player2, int roll1, int roll2)
+	{
+		if (score_player1 >= 21)
+		{
+			return { games.at(roll1), 0 };
+			//return { 1, 0 };
+		}
+		else if (score_player2 >= 21)
+		{
+			return { 0, games.at(roll2) };
+			//return { 0, 1 };
+		}
+		else
+		{
+			results result{};
+
+			for (int i = 3; i < 10; i++)
+			{
+				int new_pos_player1{ position_player1 + i };
+
+				if (new_pos_player1 > 10)
+				{
+					new_pos_player1 %= 10;
+					if (new_pos_player1 == 0) new_pos_player1 = 10;
+				}
+
+				const int new_score_player1{ score_player1 + new_pos_player1 };
+
+				if (new_score_player1 < 21)
+				{
+					results winner{ count_wins(games, new_score_player1, score_player2, new_pos_player1, position_player2, i, 0) };
+
+					if (roll1 != 0 && winner.wins_player1 > 0) winner.wins_player1 *= games.at(roll1);
+					if (roll2 != 0 && winner.wins_player2 > 0) winner.wins_player2 *= games.at(roll2);
+
+					result += winner;
+
+
+
+					for (int j = 3; j < 10; j++)
+					{
+						int new_pos_player2{ position_player2 + j };
+
+
+						if (new_pos_player2 > 10)
+						{
+							new_pos_player2 %= 10;
+							if (new_pos_player2 == 0) new_pos_player2 = 10;
+						}
+
+						const int new_score_player2{ score_player2 + new_pos_player2 };
+
+						winner = count_wins(games, new_score_player1, new_score_player2, new_pos_player1, new_pos_player2, i, j);
+
+						if (roll1 != 0 && winner.wins_player1 > 0) winner.wins_player1*= games.at(roll1);
+						if (roll2 != 0 && winner.wins_player2 > 0) winner.wins_player2*= games.at(roll2);
+
+						result += winner;
+					}
+				}
+				else
+				{
+					if (roll1 != 0)
+					{
+						result += {games.at(i)* games.at(roll1), 0};
+					}
+					else
+					{
+						result += {games.at(i), 0};
+					}
+				}
+			}
+			return result;
+		}
+	}
+
+	void execute_part2(const starting_positions& data)
+	{
+		results result{};
+
+		std::map<int, uint64_t> games{};
+
+		for (int i = 1; i <= 3; i++)
+		{
+			for (int j = 1; j <= 3; j++)
+			{
+				for (int k = 1; k <= 3; k++)
+				{
+					games[i + j + k]++;
+				}
+			}
+		}
+		//for (int i = 3; i < 10; i++)
+		{
+			result += count_wins(games, 0, 0, data.player1, data.player2, 0, 0);
+		}
+		std::cout << "player1 wins: " << result.wins_player1 << ", player2 wins: " << result.wins_player2 << '\n';
+
+		// possible game states: 10 positions, 21 scores, 2 players, (10 * 21) ^ 2
+		// every roll (3 dice): 3 - 9 points, 7 * 2 = 14
+		/*or (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 21; j++)
+			{
+				for (int k = 0; k < 2; k++)
+				{
+					game_counts[game{ i, j, k }] = 0;
+				}
+			}
+		}*/
+
+		//std::list<universe> universes{};
+
+		//uint64_t total_universes{ 1 };
+
+		//universes.push_back({ data.player1, data.player2 });
+
+		//while (universes.size() > 0)
+		//{
+		//	universe* uni{ &universes.front() };
+
+		//	_ASSERT(uni->score_player1 >= 0);
+		//	_ASSERT(uni->score_player2 >= 0);
+
+		//	if (uni->roll1_player1 == -1)
+		//	{
+		//		uni->roll1_player1 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+		//	if (uni->roll2_player1 == -1)
+		//	{
+		//		uni->roll2_player1 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+		//	if (uni->roll3_player1 == -1)
+		//	{
+		//		uni->roll3_player1 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+
+		//	const int roll_player1{ uni->roll1_player1 + uni->roll2_player1 + uni->roll3_player1 };
+
+		//	uni->position_player1 += roll_player1;
+
+		//	if (uni->position_player1 > 10)
+		//	{
+		//		uni->position_player1 = uni->position_player1 % 10;
+		//		if (uni->position_player1 == 0) uni->position_player1 = 10;
+		//	}
+
+		//	uni->score_player1 += uni->position_player1;
+
+		//	_ASSERT(uni->score_player1 >= 0);
+
+		//	//printf("player 1, score: %d, roll: {%d, %d, %d}, pos: %d\n", score_player1, roll1_player1, roll2_player1, roll3_player1, position_player1);
+		//	if (uni->score_player1 >= 21)
+		//	{
+		//		wins_player1++;
+		//		universes.erase(universes.begin());
+		//		continue;
+		//	}
+
+		//	if (uni->roll1_player2 == -1)
+		//	{
+		//		uni->roll1_player2 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+		//	if (uni->roll2_player2 == -1)
+		//	{
+		//		uni->roll2_player2 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, uni->roll1_player2, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, uni->roll1_player2, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+		//	if (uni->roll3_player2 == -1)
+		//	{
+		//		uni->roll3_player2 = 1;
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, uni->roll1_player2, uni->roll2_player2, 2 });// uni = &universes.at(0);
+		//		universes.push_back({ uni->position_player1, uni->position_player2, uni->score_player1, uni->score_player2, uni->roll1_player1, uni->roll2_player1, uni->roll3_player1, uni->roll1_player2, uni->roll2_player2, 3 });// uni = &universes.at(0);
+
+		//		total_universes += 2;
+		//	}
+
+		//	const int roll_player2{ uni->roll1_player2 + uni->roll2_player2 + uni->roll3_player2 };
+
+		//	uni->position_player2 += roll_player2;
+
+		//	if (uni->position_player2 > 10)
+		//	{
+		//		uni->position_player2 = uni->position_player2 % 10;
+		//		if (uni->position_player2 == 0) uni->position_player2 = 10;
+		//	}
+
+		//	uni->score_player2 += uni->position_player2;
+
+		//	_ASSERT(uni->score_player2 >= 0);
+
+		//	//printf("player 1, score: %d, roll: {%d, %d, %d}, pos: %d\n", score_player1, roll1_player1, roll2_player1, roll3_player1, position_player1);
+		//	if (uni->score_player2 >= 21)
+		//	{
+		//		wins_player2++;
+		//		universes.erase(universes.begin());
+		//		continue;
+		//	}
+
+		//	uni->roll1_player1 = -1;
+		//	uni->roll2_player1 = -1;
+		//	uni->roll3_player1 = -1;
+		//	uni->roll1_player2 = -1;
+		//	uni->roll2_player2 = -1;
+		//	uni->roll3_player2 = -1;
+		//}
+
+		//std::cout << "most wins: " << (wins_player1 > wins_player2 ? wins_player1 : wins_player2) << '\n';
+		//std::cout << "total universes: " << total_universes << '\n';
+	}
+
+	execution_result time()
+	{
+		auto input{ read_input() };
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+		for (int i = 0; i < 1; i++)
+		{
+			execute_part1(input);
+			execute_part2(input);
+		}
+
+		auto stop = std::chrono::high_resolution_clock::now();
+
+		return { std::chrono::duration_cast<std::chrono::microseconds>(stop - start), 1 };
+	}
+}
+#pragma endregion Day 21
+
 #pragma endregion Advent of Code - 2021
 
 int main()
@@ -1784,10 +2427,12 @@ int main()
 	y2021.at(day(2)) = day_2_2021__time();
 	y2021.at(day(3)) = day_3_2021__time();
 	y2021.at(day(4)) = day_4_2021__time();
-	
+	y2021.at(day(5)) = _2021_5::time();
+
 	y2021.at(day(17)) = day_17_2021__time();
 
 	y2021.at(day(20)) = day_20_2021__time();
+	y2021.at(day(21)) = _2021_21::time();
 
 	std::cout << "           2015    2016    2017    2018    2019    2020    2021\n";
 
